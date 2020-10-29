@@ -1,6 +1,7 @@
 package com.github.gpaddons.gpclaimexpiration;
 
 import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.CustomLogEntryTypes;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.events.ClaimExpirationEvent;
 import org.bukkit.Location;
@@ -17,6 +18,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -48,6 +50,7 @@ class EvaluationRunnable implements Runnable
 
     private Set<UUID> refreshPlayers()
     {
+        GriefPrevention.AddLogEntry("[GPClaimExpiration] Refreshing claim owner list", CustomLogEntryTypes.Debug, true);
         final Future<Set<UUID>> playersFuture = plugin.getServer().getScheduler().callSyncMethod(plugin, () ->
                 GriefPrevention.instance.dataStore.getClaims().stream().map(claim ->
                 {
@@ -59,7 +62,9 @@ class EvaluationRunnable implements Runnable
 
         try
         {
-            return playersFuture.get();
+            Set<UUID> uuids = playersFuture.get();
+            GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] Fetched %s unique claim owners.", uuids.size()), CustomLogEntryTypes.Debug, true);
+            return uuids;
         }
         catch (InterruptedException | ExecutionException e)
         {
@@ -86,6 +91,8 @@ class EvaluationRunnable implements Runnable
             }
         }
 
+        GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] Checking expiration for %s", playerUUID), CustomLogEntryTypes.Debug, true);
+
         // Remove from list, list will refresh when empty.
         iterator.remove();
 
@@ -94,10 +101,14 @@ class EvaluationRunnable implements Runnable
         // Ensure player is not exempt from claim expiration.
         if (plugin.isExempt(player)) return;
 
+        GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] %s is not exempt from expiration.", playerUUID), CustomLogEntryTypes.Debug, true);
+
         long timeSinceLastSession = System.currentTimeMillis() - plugin.getLastQualifyingSession(player);
 
         // Ensure last qualifying session is before the earliest time any claim could expire.
         if (timeSinceLastSession >= plugin.getShortestClaimExpiration()) return;
+
+        GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] %s has not been online for %s days, claims may be eligible to delete.", playerUUID, TimeUnit.DAYS.convert(timeSinceLastSession, TimeUnit.MILLISECONDS)), CustomLogEntryTypes.Debug, true);
 
         evaluateClaims(player, timeSinceLastSession);
     }
@@ -106,6 +117,7 @@ class EvaluationRunnable implements Runnable
     {
         final Future<Collection<Claim>> playerClaims = plugin.getServer().getScheduler().callSyncMethod(plugin,
                 () -> GriefPrevention.instance.dataStore.getClaims().stream()
+                        // Claims must be top level claims with the correct owner.
                         .filter(claim -> claim.parent == null && player.getUniqueId().equals(claim.ownerID))
                         .collect(Collectors.toList()));
 
@@ -123,6 +135,8 @@ class EvaluationRunnable implements Runnable
     {
         if (timeSinceLastSession <= plugin.getProtectionDuration(claim)) return;
 
+        GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] %s has an area of %s and is eligible for delete", claim.getID(), claim.getArea()), CustomLogEntryTypes.Debug, true);
+
         // Don't attempt to schedule if plugin is disabled.
         if (!plugin.isEnabled()) return;
 
@@ -134,6 +148,8 @@ class EvaluationRunnable implements Runnable
 
             // Respect event cancellation.
             if (event.isCancelled()) return;
+
+            GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] Claim %s by %s has expired.", claim.getID(), claim.ownerID), CustomLogEntryTypes.Debug, true);
 
             // Fetch delete commands and add additional placeholders.
             Location max = claim.getGreaterBoundaryCorner();
