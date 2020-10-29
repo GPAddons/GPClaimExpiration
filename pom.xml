@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.gpaddons</groupId>
-    <artifactId>genericartifact</artifactId>
+    <artifactId>gpclaimexpiration</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>GenericAddon</name>
-    <description>GenericDescription</description>
+    <name>GPClaimExpiration</name>
+    <description>Automatic expiration of GP claims.</description>
 
     <developers>
         <developer>
-            <name>GenericAuthor</name>
+            <name>Jikoo</name>
         </developer>
     </developers>
 
@@ -50,6 +50,12 @@
             <version>16.16.0</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.MilkBowl</groupId>
+            <artifactId>VaultAPI</artifactId>
+            <version>1.7</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -80,4 +86,3 @@
     </build>
 
 </project>
-

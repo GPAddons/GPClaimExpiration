@@ -1,0 +1,23 @@
+expiration:
+  evaluation:
+    rate:
+      # Check types: PERCENT, COUNT
+      type: PERCENT
+      value: 4.35
+    random: false
+  days_per_area:
+    250000: -1
+    10000: 90
+    100: 60
+    0: 30
+  bypass:
+    claim_blocks: 10000
+    bonus_claim_blocks: -1
+    permissions:
+      - gpclaimexpiration.persist
+  # Command placeholders: $playerName, $playerUUID, $world, $locX, $locY, $locZ
+  # Additional delete command placeholders: $claimId, $locMaxX, $locMaxY, $locMaxZ, $area
+  claim.commands: []
+  pet:
+    days: 60
+    commands: []

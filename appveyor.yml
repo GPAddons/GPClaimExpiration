@@ -29,8 +29,8 @@ cache:
   - C:\maven\apache-maven-3.6.3
   - C:\Users\appveyor\.m2
 artifacts:
-  - path: target\GenericAddon.jar
-    name: GenericAddon
+  - path: target\GPClaimExpiration.jar
+    name: GPClaimExpiration
 only_commits:
   files:
     - src/**/*
