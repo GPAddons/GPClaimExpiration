@@ -1,6 +1,7 @@
 package com.github.gpaddons.gpclaimexpiration;
 
 import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.CustomLogEntryTypes;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.PlayerData;
 import org.bukkit.Location;
@@ -96,12 +97,21 @@ class UnprotectedPetAbandoner implements Listener
         if (claim != null)
         {
             OfflinePlayer claimOwner = plugin.getServer().getOfflinePlayer(claim.getOwnerID());
+            GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] Transferred abandoned %s from %s to %s at %s %s, %s, %s",
+                    tameable.getType().name(), owner.getUniqueId(), claimOwner.getUniqueId(), tameable.getWorld().getName(),
+                    tameable.getLocation().getBlockX(), tameable.getLocation().getBlockY(), tameable.getLocation().getBlockZ()),
+                    CustomLogEntryTypes.Debug, true);
             tameable.setOwner(claimOwner);
             return;
         }
 
         // Untame pet.
         tameable.setOwner(null);
+
+        GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] Abandoned %s of %s at %s %s, %s, %s",
+                tameable.getType().name(), owner.getUniqueId(), tameable.getWorld().getName(),
+                tameable.getLocation().getBlockX(), tameable.getLocation().getBlockY(), tameable.getLocation().getBlockZ()),
+                CustomLogEntryTypes.Debug, true);
 
         // Make untamed sittables stand.
         if (tameable instanceof Sittable)
