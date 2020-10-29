@@ -135,7 +135,7 @@ public class GPClaimExpiration extends JavaPlugin
             taskClasses.add(Class.forName("me.ryanhamshire.GriefPrevention.CleanupUnusedClaimPreTask"));
             taskClasses.add(Class.forName("me.ryanhamshire.GriefPrevention.CleanupUnusedClaimTask"));
 
-            Class<?> craftTask = Class.forName("org.bukkit.craftbukkit.scheduler.CraftTask");
+            Class<?> craftTask = Class.forName(getServer().getClass().getPackage().getName() + ".scheduler.CraftTask");
             Field runnableField = craftTask.getDeclaredField("rTask");
             runnableField.setAccessible(true);
 
