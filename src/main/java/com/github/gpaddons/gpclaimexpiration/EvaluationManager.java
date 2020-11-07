@@ -23,29 +23,27 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 /**
- * Runnable for evaluating and expiring
+ * Manages periodic evaluation of users' claims.
  */
-class EvaluationRunnable implements Runnable
+class EvaluationManager
 {
 
     private final GPClaimExpiration plugin;
     private final Random random;
     private Set<UUID> players;
 
-    EvaluationRunnable(@NotNull GPClaimExpiration plugin)
+    EvaluationManager(@NotNull GPClaimExpiration plugin)
     {
         this.plugin = plugin;
         this.random = new Random();
     }
 
-    @Override
-    public void run()
-    {
+    private void run() {
         if (players == null || players.isEmpty()) players = refreshPlayers();
 
         checkNextPlayer();
 
-        scheduleNextRun();
+        scheduleNextRun(calculateDelay());
     }
 
     private Set<UUID> refreshPlayers()
@@ -170,12 +168,17 @@ class EvaluationRunnable implements Runnable
         });
     }
 
-    private void scheduleNextRun()
+    void startScheduling()
+    {
+        scheduleNextRun(100L);
+    }
+
+    private void scheduleNextRun(long delay)
     {
         // Don't attempt to schedule if plugin is disabled.
         if (!plugin.isEnabled()) return;
 
-        plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, this, calculateDelay());
+        plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, this::run, delay);
     }
 
     private long calculateDelay()

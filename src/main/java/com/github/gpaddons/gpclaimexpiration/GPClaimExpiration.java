@@ -60,7 +60,7 @@ public class GPClaimExpiration extends JavaPlugin
         getServer().getScheduler().cancelTasks(this);
 
         // Schedule claim cleanup task.
-        getServer().getScheduler().runTaskLaterAsynchronously(this, new EvaluationRunnable(this), 300L);
+        new EvaluationManager(this).startScheduling();
     }
 
     /**
