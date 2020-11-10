@@ -6,6 +6,7 @@ import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.events.ClaimExpirationEvent;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -178,7 +179,13 @@ class EvaluationManager
         // Don't attempt to schedule if plugin is disabled.
         if (!plugin.isEnabled()) return;
 
-        plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, this::run, delay);
+        new BukkitRunnable() {
+            @Override
+            public void run()
+            {
+                EvaluationManager.this.run();
+            }
+        }.runTaskLaterAsynchronously(plugin, delay);
     }
 
     private long calculateDelay()
