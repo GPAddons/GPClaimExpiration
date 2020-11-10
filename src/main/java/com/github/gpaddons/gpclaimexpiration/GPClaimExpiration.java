@@ -8,25 +8,15 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
-import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 /**
@@ -42,9 +32,6 @@ public class GPClaimExpiration extends JavaPlugin
     public void onEnable()
     {
         saveDefaultConfig();
-
-        // Disable GriefPrevention's claim cleanup system.
-        disableGPClaimExpiration();
 
         // Load configured claim durations.
         loadAreaDurations();
@@ -130,73 +117,6 @@ public class GPClaimExpiration extends JavaPlugin
 
         return getConfig().getStringList("expiration.bypass.permissions").stream()
                 .anyMatch(permission -> vault.hasPermission(player, permission));
-    }
-
-    private void disableGPClaimExpiration() {
-        // Attempt to cancel all of GP's claim cleanup tasks.
-        try
-        {
-            Set<Object> taskClasses = new HashSet<>();
-            taskClasses.add(Class.forName("me.ryanhamshire.GriefPrevention.CleanupUnusedClaimPreTask"));
-            taskClasses.add(Class.forName("me.ryanhamshire.GriefPrevention.CleanupUnusedClaimTask"));
-
-            Class<?> craftTask = Class.forName(getServer().getClass().getPackage().getName() + ".scheduler.CraftTask");
-            Method getTaskClass = craftTask.getDeclaredMethod("getTaskClass");
-            getTaskClass.setAccessible(true);
-
-            Set<BukkitTask> tasks = new HashSet<>();
-
-            Consumer<Object> taskListConsumer = object ->
-            {
-                if (!(object instanceof Collection)) return;
-
-                Collection<?> collection = (Collection<?>) object;
-
-                for (Object runnable : collection)
-                {
-                    if (!craftTask.isInstance(runnable)) continue;
-
-                    try
-                    {
-                        if (taskClasses.contains(getTaskClass.invoke(runnable)))
-                        {
-                            tasks.add((BukkitTask) runnable);
-                        }
-                    }
-                    catch (IllegalAccessException | InvocationTargetException e)
-                    {
-                        getLogger().log(Level.WARNING, "Unable to cancel GriefPrevention's claim expiration tasks!", e);
-                    }
-                }
-            };
-
-            final BukkitScheduler scheduler = getServer().getScheduler();
-
-            final Class<? extends @NotNull BukkitScheduler> craftScheduler = scheduler.getClass();
-
-            for (String listName : new String[] { "pending", "temp" })
-            {
-                final Field fieldTaskList = craftScheduler.getDeclaredField(listName);
-                fieldTaskList.setAccessible(true);
-
-                taskListConsumer.accept(fieldTaskList.get(scheduler));
-            }
-
-            tasks.forEach(BukkitTask::cancel);
-
-        }
-        catch (ReflectiveOperationException e)
-        {
-            getLogger().log(Level.WARNING, "Unable to cancel GriefPrevention's claim expiration tasks!", e);
-        }
-
-        // Configure GP's claim expiration checks to run as infrequently as possible.
-        GriefPrevention.instance.config_claims_expirationDays = Integer.MAX_VALUE;
-        GriefPrevention.instance.config_claims_expirationExemptionTotalBlocks = Integer.MAX_VALUE;
-        GriefPrevention.instance.config_claims_expirationExemptionBonusBlocks = Integer.MAX_VALUE;
-        GriefPrevention.instance.config_advanced_claim_expiration_check_rate = Integer.MAX_VALUE;
-        GriefPrevention.instance.config_claims_chestClaimExpirationDays = Integer.MAX_VALUE;
-        GriefPrevention.instance.config_claims_unusedClaimExpirationDays = Integer.MAX_VALUE;
     }
 
     private void loadAreaDurations()
