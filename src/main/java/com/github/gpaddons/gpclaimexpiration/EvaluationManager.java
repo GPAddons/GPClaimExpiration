@@ -105,7 +105,7 @@ class EvaluationManager
         long timeSinceLastSession = System.currentTimeMillis() - plugin.getLastQualifyingSession(player);
 
         // Ensure last qualifying session is before the earliest time any claim could expire.
-        if (timeSinceLastSession >= plugin.getShortestClaimExpiration()) return;
+        if (timeSinceLastSession <= plugin.getShortestClaimExpiration()) return;
 
         GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] %s has not been online for %s days, claims may be eligible to delete.", playerUUID, TimeUnit.DAYS.convert(timeSinceLastSession, TimeUnit.MILLISECONDS)), CustomLogEntryTypes.Debug, true);
 
