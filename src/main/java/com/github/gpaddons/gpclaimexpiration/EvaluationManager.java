@@ -10,7 +10,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -32,6 +31,7 @@ class EvaluationManager
     private final GPClaimExpiration plugin;
     private final Random random;
     private Set<UUID> players;
+    private int startingPlayers = 0;
 
     EvaluationManager(@NotNull GPClaimExpiration plugin)
     {
@@ -40,14 +40,14 @@ class EvaluationManager
     }
 
     private void run() {
-        if (players == null || players.isEmpty()) players = refreshPlayers();
+        if (players == null || players.isEmpty()) refreshPlayers();
 
         checkNextPlayer();
 
         scheduleNextRun(calculateDelay());
     }
 
-    private Set<UUID> refreshPlayers()
+    private void refreshPlayers()
     {
         GriefPrevention.AddLogEntry("[GPClaimExpiration] Refreshing claim owner list", CustomLogEntryTypes.Debug, true);
         final Future<Set<UUID>> playersFuture = plugin.getServer().getScheduler().callSyncMethod(plugin, () ->
@@ -61,14 +61,13 @@ class EvaluationManager
 
         try
         {
-            Set<UUID> uuids = playersFuture.get();
-            GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] Fetched %s unique claim owners.", uuids.size()), CustomLogEntryTypes.Debug, true);
-            return uuids;
+            players = playersFuture.get();
+            startingPlayers = players.size();
+            GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] Fetched %s unique claim owners.", startingPlayers), CustomLogEntryTypes.Debug, true);
         }
         catch (InterruptedException | ExecutionException e)
         {
             plugin.getLogger().log(Level.WARNING, "Error fetching claim owners' UUIDs from main thread", e);
-            return Collections.emptySet();
         }
     }
 
@@ -196,7 +195,7 @@ class EvaluationManager
         if (getTaskEvaluationType() == EvaluationType.PERCENT)
         {
             // Schedule based on percentage per hour. Minimum 1 tick delay.
-            return Math.max(1, (long) (72000 / (getTaskEvaluationValue() * players.size())));
+            return Math.max(1, (long) (72000 / (getTaskEvaluationValue() * startingPlayers)));
         }
 
         // Schedule a fixed number per hour. Minimum 1 tick delay.
