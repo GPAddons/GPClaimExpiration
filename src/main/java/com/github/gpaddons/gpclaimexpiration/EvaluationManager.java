@@ -196,7 +196,7 @@ class EvaluationManager
         if (getTaskEvaluationType() == EvaluationType.PERCENT)
         {
             // Schedule based on percentage per hour. Minimum 1 tick delay.
-            return Math.max(1, (long) (72000 / getTaskEvaluationValue() * players.size()));
+            return Math.max(1, (long) (72000 / (getTaskEvaluationValue() * players.size())));
         }
 
         // Schedule a fixed number per hour. Minimum 1 tick delay.
