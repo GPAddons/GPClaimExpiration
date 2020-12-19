@@ -15,8 +15,8 @@ expiration:
     bonus_claim_blocks: -1
     permissions:
       - gpclaimexpiration.persist
-  # Command placeholders: $playerName, $playerUUID, $world, $locX, $locY, $locZ
-  # Additional delete command placeholders: $claimId, $locMaxX, $locMaxY, $locMaxZ, $area
+  # Command placeholders: $ownerName, $ownerId, $world, $locX, $locY, $locZ
+  # Additional claim command placeholders: $claimId, $locXMax, $locYMax, $locZMax, $area, $width (X), $depth (Z)
   claim.commands: []
   pet:
     days: 60

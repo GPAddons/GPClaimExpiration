@@ -1,0 +1,6 @@
+notification:
+  expiration: "&x&e&e&7&7&0&eClaim at $locX, $locZ ($area blocks) will expire after $days days of owner inactivity."
+general:
+  admin: "an administrator"
+  unknown_world: "unknown world"
+  unnamed_player: "someone ($uuid)"

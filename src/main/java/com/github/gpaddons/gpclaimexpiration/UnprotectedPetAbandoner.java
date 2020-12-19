@@ -1,5 +1,7 @@
 package com.github.gpaddons.gpclaimexpiration;
 
+import com.github.gpaddons.util.lang.replacement.LocationReplacement;
+import com.github.gpaddons.util.lang.replacement.OwnerReplacement;
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.CustomLogEntryTypes;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
@@ -29,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 class UnprotectedPetAbandoner implements Listener
 {
 
-    private final GPClaimExpiration plugin;
+    private final @NotNull GPClaimExpiration plugin;
 
     UnprotectedPetAbandoner(@NotNull GPClaimExpiration plugin)
     {
@@ -130,7 +132,8 @@ class UnprotectedPetAbandoner implements Listener
         }
 
         // Run pet abandonment commands.
-        for (String command : plugin.getCommandList("expiration.pets.commands", owner, tameable.getLocation()))
+        for (String command : plugin.getCommandList("expiration.pets.commands",
+                new OwnerReplacement(owner), new LocationReplacement(tameable.getLocation())))
         {
             plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), command);
         }

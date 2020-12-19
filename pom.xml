@@ -17,7 +17,7 @@
     </developers>
 
     <properties>
-        <project.api-version>1.13</project.api-version>
+        <project.api-version>1.16</project.api-version>
     </properties>
 
     <repositories>
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>${project.api-version}.2-R0.1-SNAPSHOT</version>
+            <version>${project.api-version}.4-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

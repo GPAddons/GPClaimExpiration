@@ -10,6 +10,7 @@ import java.util.Locale;
  */
 enum EvaluationType
 {
+
     PERCENT, COUNT;
 
     public static @NotNull EvaluationType of(@Nullable String value)

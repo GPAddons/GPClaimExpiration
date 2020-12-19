@@ -1,9 +1,10 @@
 package com.github.gpaddons.gpclaimexpiration;
 
+import com.github.gpaddons.util.VaultBridge;
+import com.github.gpaddons.util.lang.MessageReplacement;
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.PlayerData;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.HandlerList;
@@ -78,7 +79,7 @@ public class GPClaimExpiration extends JavaPlugin
      *
      * @return the Claim's protection duration
      */
-    public long getProtectionDuration(Claim claim)
+    public long getProtectionDuration(@NotNull Claim claim)
     {
         final Map.Entry<Integer, Long> areaProtection = areaProtectionDuration.floorEntry(claim.getArea());
 
@@ -91,7 +92,7 @@ public class GPClaimExpiration extends JavaPlugin
      * @param player the OfflinePlayer to check
      * @return the player's last online
      */
-    public long getLastQualifyingSession(OfflinePlayer player)
+    public long getLastQualifyingSession(@NotNull OfflinePlayer player)
     {
         if (player.isOnline()) return System.currentTimeMillis();
 
@@ -105,7 +106,7 @@ public class GPClaimExpiration extends JavaPlugin
      * @param player the OfflinePlayer to check
      * @return true if the player is exempt from expiration
      */
-    public boolean isExempt(OfflinePlayer player)
+    public boolean isExempt(@NotNull OfflinePlayer player)
     {
         if (player.isOnline()) return true;
 
@@ -165,20 +166,18 @@ public class GPClaimExpiration extends JavaPlugin
         return configValue <= integerSupplier.get();
     }
 
-    @NotNull List<String> getCommandList(@NotNull String key, @NotNull OfflinePlayer player, @NotNull Location location)
+    @NotNull List<String> getCommandList(@NotNull String key, MessageReplacement @NotNull ... replacements)
     {
         List<String> list = getConfig().getStringList(key);
 
         if (list.isEmpty()) return list;
 
-        String playerName = player.getName() != null ? player.getName() : player.getUniqueId().toString();
-        String playerUUID = player.getUniqueId().toString();
-        String world = location.getWorld() == null ? "Unloaded World" : location.getWorld().getName();
-
-        return list.stream().map(command -> command
-                .replace("$playerName", playerName).replace("$playerUUID", playerUUID).replace("$world", world)
-                .replace("$locX", String.valueOf(location.getBlockX())).replace("$locY", String.valueOf(location.getBlockY())).replace("$locZ", String.valueOf(location.getBlockZ()))
-        ).collect(Collectors.toList());
+        return list.stream().map(command -> {
+            for (MessageReplacement replacement : replacements) {
+                command = replacement.replace(command);
+            }
+            return command;
+        }).collect(Collectors.toList());
     }
 
 }

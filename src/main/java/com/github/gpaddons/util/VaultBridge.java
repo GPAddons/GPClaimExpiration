@@ -1,5 +1,6 @@
-package com.github.gpaddons.gpclaimexpiration;
+package com.github.gpaddons.util;
 
+import com.github.gpaddons.gpclaimexpiration.GPClaimExpiration;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.OfflinePlayer;
@@ -14,14 +15,14 @@ import org.jetbrains.annotations.Nullable;
 /**
  * A bridge for Vault-supporting permissions plugins.
  */
-class VaultBridge implements Listener
+public class VaultBridge implements Listener
 {
 
-    private final GPClaimExpiration plugin;
+    private final @NotNull GPClaimExpiration plugin;
     private boolean setupDone = false;
     private @Nullable PermissionWrapper permissionWrapper = null;
 
-    VaultBridge(@NotNull GPClaimExpiration plugin)
+    public VaultBridge(@NotNull GPClaimExpiration plugin)
     {
         this.plugin = plugin;
     }
@@ -33,7 +34,7 @@ class VaultBridge implements Listener
      * @param permission the permission to check
      * @return true if the player has the permission
      */
-    boolean hasPermission(@NotNull OfflinePlayer player, @NotNull String permission)
+    public boolean hasPermission(@NotNull OfflinePlayer player, @NotNull String permission)
     {
         loadPermission(false);
 
@@ -109,7 +110,7 @@ class VaultBridge implements Listener
     private static class PermissionWrapper
     {
 
-        private final Permission permission;
+        private final @NotNull Permission permission;
 
         private PermissionWrapper(@NotNull Permission permission)
         {
