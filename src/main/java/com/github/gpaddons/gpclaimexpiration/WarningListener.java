@@ -18,24 +18,24 @@ import java.util.concurrent.TimeUnit;
 /**
  * Listener for warning users about claim expiration times.
  */
-public class WarningListener implements Listener
+class WarningListener implements Listener
 {
 
     private final GPClaimExpiration plugin;
 
-    public WarningListener(GPClaimExpiration plugin)
+    WarningListener(GPClaimExpiration plugin)
     {
         this.plugin = plugin;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onClaim(@NotNull ClaimCreatedEvent event)
+    private void onClaim(@NotNull ClaimCreatedEvent event)
     {
         warn(event.getClaim(), event.getCreator());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onClaimResize(@NotNull ClaimModifiedEvent event)
+    private void onClaimResize(@NotNull ClaimModifiedEvent event)
     {
         warn(event.getTo(), event.getModifier());
     }

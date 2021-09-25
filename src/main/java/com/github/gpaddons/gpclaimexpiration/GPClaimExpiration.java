@@ -1,6 +1,8 @@
 package com.github.gpaddons.gpclaimexpiration;
 
+import com.github.gpaddons.gpclaimexpiration.lang.Message;
 import com.github.gpaddons.util.VaultBridge;
+import com.github.gpaddons.util.lang.Lang;
 import com.github.gpaddons.util.lang.MessageReplacement;
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
@@ -43,6 +45,11 @@ public class GPClaimExpiration extends JavaPlugin
         // Register listeners.
         getServer().getPluginManager().registerEvents(vault, this);
         getServer().getPluginManager().registerEvents(new UnprotectedPetAbandoner(this), this);
+        if (Lang.isSet(Message.NOTIFICATION_EXPIRATION))
+        {
+            // Only bother with warning listener if message is set.
+            getServer().getPluginManager().registerEvents(new WarningListener(this), this);
+        }
 
         // Cancel existing tasks.
         getServer().getScheduler().cancelTasks(this);
