@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -127,6 +128,10 @@ class EvaluationManager
         try
         {
             playerClaims.get().forEach(claim -> evaluateClaim(claim, timeSinceLastSession));
+        }
+        catch (CancellationException ignored)
+        {
+            // Do nothing, server is likely shutting down.
         }
         catch (@NotNull InterruptedException | ExecutionException e)
         {
