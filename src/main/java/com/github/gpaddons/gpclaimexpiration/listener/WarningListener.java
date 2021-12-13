@@ -1,24 +1,23 @@
-package com.github.gpaddons.gpclaimexpiration;
+package com.github.gpaddons.gpclaimexpiration.listener;
 
+import com.github.gpaddons.gpclaimexpiration.GPClaimExpiration;
 import com.github.gpaddons.gpclaimexpiration.lang.Message;
 import com.github.gpaddons.util.lang.Lang;
 import me.ryanhamshire.GriefPrevention.Claim;
-import me.ryanhamshire.GriefPrevention.events.ClaimCreatedEvent;
-import me.ryanhamshire.GriefPrevention.events.ClaimModifiedEvent;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Listener for warning users about claim expiration times.
+ * Base listener for warning users about claim expiration times.
  */
-class WarningListener implements Listener
+abstract class WarningListener implements Listener
 {
 
     private final GPClaimExpiration plugin;
@@ -28,19 +27,14 @@ class WarningListener implements Listener
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    private void onClaim(@NotNull ClaimCreatedEvent event)
+    void warn(@NotNull Claim claim, @Nullable UUID modifier)
     {
-        warn(event.getClaim(), event.getCreator());
+        if (modifier == null) return;
+
+        warn(claim, plugin.getServer().getPlayer(modifier));
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    private void onClaimResize(@NotNull ClaimModifiedEvent event)
-    {
-        warn(event.getTo(), event.getModifier());
-    }
-
-    private void warn(@NotNull Claim claim, CommandSender modifier)
+    void warn(@NotNull Claim claim, @Nullable CommandSender modifier)
     {
         // Ensure modification is by a player.
         if (!(modifier instanceof Player)) return;
