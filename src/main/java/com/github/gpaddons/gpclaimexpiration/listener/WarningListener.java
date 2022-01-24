@@ -47,13 +47,13 @@ abstract class WarningListener implements Listener
 
         OfflinePlayer player = plugin.getServer().getOfflinePlayer(claim.ownerID);
 
-        long protectionDuration = plugin.getProtectionDuration(claim);
+        long protectionDuration = plugin.config().getProtectionDuration(claim);
 
         // Ensure claim is of a size that will actually expire.
         if (protectionDuration == Long.MAX_VALUE) return;
 
         // Ensure claim will be eligible for delete.
-        if (plugin.isExempt(player)) return;
+        if (plugin.config().isExempt(player)) return;
 
         long days = TimeUnit.DAYS.convert(protectionDuration, TimeUnit.MILLISECONDS);
 

@@ -90,7 +90,7 @@ class UnprotectedPetAbandoner implements Listener
         if (claim != null && claim.getPermission(owner.getUniqueId().toString()) != null) return;
 
         // Ensure pet owner is not exempt from expiration.
-        if (plugin.isExempt(owner)) return;
+        if (plugin.config().isExempt(owner)) return;
 
         // Ensure pet owner's last play session was long enough ago to expire pet ownership.
         if (plugin.getLastQualifyingSession(owner) >= System.currentTimeMillis() - TimeUnit.MILLISECONDS.convert(days, TimeUnit.DAYS)) return;
@@ -132,7 +132,7 @@ class UnprotectedPetAbandoner implements Listener
         }
 
         // Run pet abandonment commands.
-        for (String command : plugin.getCommandList("expiration.pets.commands",
+        for (String command : plugin.config().getCommandList("expiration.pets.commands",
                 new OwnerReplacement(owner), new LocationReplacement(tameable.getLocation())))
         {
             plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), command);
