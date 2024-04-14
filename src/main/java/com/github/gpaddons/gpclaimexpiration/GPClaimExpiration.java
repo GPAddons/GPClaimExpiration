@@ -4,8 +4,8 @@ import com.github.gpaddons.gpclaimexpiration.config.Configuration;
 import com.github.gpaddons.gpclaimexpiration.lang.Message;
 import com.github.gpaddons.gpclaimexpiration.listener.LegacyWarningListener;
 import com.github.gpaddons.gpclaimexpiration.listener.ModernWarningListener;
-import com.github.gpaddons.util.VaultBridge;
 import com.github.gpaddons.util.lang.Lang;
+import com.github.jikoo.planarwrappers.service.VaultPermission;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public class GPClaimExpiration extends JavaPlugin
 {
 
-    private final VaultBridge vault = new VaultBridge(this);
+    private VaultPermission vault;
     private Configuration config;
 
     @Override
@@ -31,8 +31,9 @@ public class GPClaimExpiration extends JavaPlugin
         // Unregister existing listeners.
         HandlerList.unregisterAll(this);
 
+        this.vault = new VaultPermission(this);
+
         // Register listeners.
-        getServer().getPluginManager().registerEvents(vault, this);
         getServer().getPluginManager().registerEvents(new UnprotectedPetAbandoner(this), this);
 
         // Only bother with warning listener if message is set.
@@ -75,7 +76,7 @@ public class GPClaimExpiration extends JavaPlugin
         return config;
     }
 
-    public VaultBridge getPermissionBridge()
+    public VaultPermission getPermissionBridge()
     {
         return vault;
     }

@@ -48,10 +48,9 @@ class UnprotectedPetAbandoner implements Listener
             Entity damager = ((EntityDamageByEntityEvent) event).getDamager();
             if (damager instanceof Player)
                 player = (Player) damager;
-            else if (damager instanceof Projectile)
+            else if (damager instanceof Projectile projectile)
             {
-                Projectile projectile = (Projectile) damager;
-                if (projectile.getShooter() instanceof Player)
+              if (projectile.getShooter() instanceof Player)
                     player = (Player) projectile.getShooter();
             }
         }
@@ -69,18 +68,20 @@ class UnprotectedPetAbandoner implements Listener
 
     private void onPetInteract(@Nullable Player actor, @NotNull Entity entity)
     {
-        int days = plugin.getConfig().getInt("expiration.pets.days", -1);
+        // Ensure entity is a pet.
+        if (!(entity instanceof Tameable tameable)) return;
 
-        // Ensure expiration on unclaimed pets is set and entity is a pet.
-        if (days < 0 || !(entity instanceof Tameable)) return;
+        String world = entity.getWorld().getName();
+        int days = plugin.config().getPetProtectionDuration(world);
 
-        Tameable tameable = (Tameable) entity;
+        // Ensure expiration on unclaimed pets is set.
+        if (days < 0) return;
+
         final AnimalTamer animalTamer = tameable.getOwner();
 
         // Ensure pet is tamed.
-        if (!(animalTamer instanceof OfflinePlayer)) return;
+        if (!(animalTamer instanceof OfflinePlayer owner)) return;
 
-        OfflinePlayer owner = (OfflinePlayer) animalTamer;
         Claim claim = getClaim(tameable.getLocation(), actor);
 
         // Treat admin claims as unclaimed area - no owner to transfer to.
@@ -90,7 +91,7 @@ class UnprotectedPetAbandoner implements Listener
         if (claim != null && claim.getPermission(owner.getUniqueId().toString()) != null) return;
 
         // Ensure pet owner is not exempt from expiration.
-        if (plugin.config().isExempt(owner)) return;
+        if (plugin.config().isExempt(owner, world)) return;
 
         // Ensure pet owner's last play session was long enough ago to expire pet ownership.
         if (plugin.getLastQualifyingSession(owner) >= System.currentTimeMillis() - TimeUnit.MILLISECONDS.convert(days, TimeUnit.DAYS)) return;
@@ -132,7 +133,7 @@ class UnprotectedPetAbandoner implements Listener
         }
 
         // Run pet abandonment commands.
-        for (String command : plugin.config().getCommandList("expiration.pets.commands",
+        for (String command : plugin.config().getPetCommandList(world,
                 new OwnerReplacement(owner), new LocationReplacement(tameable.getLocation())))
         {
             plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), command);

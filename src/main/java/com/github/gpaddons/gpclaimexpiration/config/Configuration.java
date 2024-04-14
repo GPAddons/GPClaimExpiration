@@ -3,6 +3,8 @@ package com.github.gpaddons.gpclaimexpiration.config;
 import com.github.gpaddons.gpclaimexpiration.GPClaimExpiration;
 import com.github.gpaddons.util.lang.MessageReplacement;
 import com.github.jikoo.planarwrappers.config.Setting;
+import com.github.jikoo.planarwrappers.config.SimpleSetSetting;
+import com.github.jikoo.planarwrappers.config.impl.IntSetting;
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.PlayerData;
@@ -15,16 +17,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class Configuration
 {
 
     private final GPClaimExpiration plugin;
     private final Setting<NavigableMap<Integer, Long>> areaProtectionDuration;
+    private final Setting<Integer> exemptionClaimBlocks;
+    private final Setting<Integer> exemptionBonusClaimBlocks;
+    private final Setting<Set<String>> exemptionPermissions;
+    private final Setting<List<String>> claimExpirationCommands;
+    private final Setting<Integer> petProtectionDuration;
+    private final Setting<List<String>> petExpirationCommands;
 
     public Configuration(GPClaimExpiration plugin)
     {
@@ -37,7 +45,7 @@ public class Configuration
         defaults.put(1_000, TimeUnit.MILLISECONDS.convert(60, TimeUnit.DAYS));
         defaults.put(0, 0L);
 
-        areaProtectionDuration = new TreeMapSetting<Integer, Long>(plugin.getConfig(), "expiration.days_per_area", defaults)
+        areaProtectionDuration = new TreeMapSetting<>(plugin.getConfig(), "expiration.days_per_area", defaults)
         {
             @Override
             protected @Nullable Integer convertKey(@NotNull String key)
@@ -71,6 +79,20 @@ public class Configuration
                 }
             }
         };
+
+        exemptionClaimBlocks = new IntSetting(plugin.getConfig(), "expiration.bypass.claim_blocks", -1);
+        exemptionBonusClaimBlocks = new IntSetting(plugin.getConfig(), "expiration.bypass.bonus_claim_blocks", -1);
+        exemptionPermissions = new SimpleSetSetting<>(plugin.getConfig(), "expiration.bypass.permissions", Set.of("gpclaimexpiration.persist")) {
+            @Override
+            protected @NotNull String convertValue(@NotNull String value)
+            {
+                return value;
+            }
+        };
+        claimExpirationCommands = new StringListSetting(plugin.getConfig(), "expiration.claim.commands", List.of());
+
+        petProtectionDuration = new IntSetting(plugin.getConfig(), "expiration.pets.days", 60);
+        petExpirationCommands = new StringListSetting(plugin.getConfig(), "expiration.pet.commands", List.of());
     }
 
     /**
@@ -122,38 +144,43 @@ public class Configuration
      * Check whether a player is exempt from expiration.
      *
      * @param player the OfflinePlayer to check
+     * @param worldName the name of the world
      * @return true if the player is exempt from expiration
      */
-    public boolean isExempt(@NotNull OfflinePlayer player)
+    public boolean isExempt(@NotNull OfflinePlayer player, @NotNull String worldName)
     {
         if (player.isOnline()) return true;
 
         PlayerData playerData = GriefPrevention.instance.dataStore.getPlayerData(player.getUniqueId());
 
-        // TODO: per-world
-        if (exceedsConfigInt("expiration.bypass.claim_blocks", playerData::getAccruedClaimBlocks)) return true;
+        if (exceedsInt(exemptionClaimBlocks.get(worldName), playerData::getAccruedClaimBlocks)) return true;
 
-        // TODO: per-world
-        if (exceedsConfigInt("expiration.bypass.bonus_claim_blocks", playerData::getBonusClaimBlocks)) return true;
+        if (exceedsInt(exemptionBonusClaimBlocks.get(worldName), playerData::getBonusClaimBlocks)) return true;
 
-        // TODO: per-world
-        return plugin.getConfig().getStringList("expiration.bypass.permissions").stream()
-                .anyMatch(permission -> plugin.getPermissionBridge().hasPermission(player, permission));
+      return exemptionPermissions.get(worldName).stream()
+                .anyMatch(permission -> plugin.getPermissionBridge().hasPermission(player, permission, worldName));
     }
 
-    private boolean exceedsConfigInt(@NotNull String path, @NotNull Supplier<Integer> integerSupplier)
+    private boolean exceedsInt(int configValue, @NotNull Supplier<Integer> integerSupplier)
     {
-        int configValue = plugin.getConfig().getInt(path, -1);
-
         if (configValue < 0) return false;
 
         return configValue <= integerSupplier.get();
     }
 
-    public @NotNull List<String> getCommandList(@NotNull String key, MessageReplacement @NotNull ... replacements)
+    public @NotNull List<String> getClaimCommandList(
+            @NotNull String worldName,
+            MessageReplacement @NotNull ... replacements)
     {
-        // TODO: per-world
-        List<String> list = plugin.getConfig().getStringList(key);
+        return getCommandList(claimExpirationCommands, worldName, replacements);
+    }
+
+    protected @NotNull List<String> getCommandList(
+            @NotNull Setting<List<String>> commands,
+            @NotNull String worldName,
+            MessageReplacement @NotNull ... replacements)
+    {
+        List<String> list = commands.get(worldName);
 
         if (list.isEmpty()) return list;
 
@@ -162,7 +189,24 @@ public class Configuration
                 command = replacement.replace(command);
             }
             return command;
-        }).collect(Collectors.toList());
+        }).toList();
+    }
+
+    /**
+     * Get the number of days before pets are considered abandoned.
+     *
+     * @param worldName the name of the world
+     * @return the number of days until pets are considered abandoned, or -1 for never.
+     */
+    public int getPetProtectionDuration(@NotNull String worldName) {
+        return petProtectionDuration.get(worldName);
+    }
+
+    public @NotNull List<String> getPetCommandList(
+            @NotNull String worldName,
+            MessageReplacement @NotNull ... replacements)
+    {
+        return getCommandList(petExpirationCommands, worldName, replacements);
     }
 
 }

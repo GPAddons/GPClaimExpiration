@@ -25,7 +25,7 @@ expiration:
 # Per-world overrides
 # Note that only certain values are configurable per-world.
 overrides:
-  # Ex.: A high turnover world may have
+  # Ex.: A high turnover world may have higher activity requirements.
   high_turnover_world:
     expiration:
       days-per-area:
