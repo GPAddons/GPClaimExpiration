@@ -6,6 +6,7 @@ import me.ryanhamshire.GriefPrevention.CustomLogEntryTypes;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.events.ClaimExpirationEvent;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
@@ -98,16 +99,10 @@ class EvaluationManager
 
         OfflinePlayer player = plugin.getServer().getOfflinePlayer(playerUUID);
 
-        // Ensure player is not exempt from claim expiration.
-        if (plugin.isExempt(player)) return;
-
-        GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] %s is not exempt from expiration.",
-                playerUUID), CustomLogEntryTypes.Debug, true);
-
         long timeSinceLastSession = System.currentTimeMillis() - plugin.getLastQualifyingSession(player);
 
         // Ensure last qualifying session is before the earliest time any claim could expire.
-        if (timeSinceLastSession <= plugin.getShortestClaimExpiration()) return;
+        if (timeSinceLastSession <= plugin.config().getShortestClaimExpiration()) return;
 
         GriefPrevention.AddLogEntry(String.format(
                 "[GPClaimExpiration] %s has not been online for %s days, claims may be eligible to delete.",
@@ -127,7 +122,7 @@ class EvaluationManager
 
         try
         {
-            playerClaims.get().forEach(claim -> evaluateClaim(claim, timeSinceLastSession));
+            playerClaims.get().forEach(claim -> evaluateClaim(player, claim, timeSinceLastSession));
         }
         catch (CancellationException ignored)
         {
@@ -139,12 +134,22 @@ class EvaluationManager
         }
     }
 
-    private void evaluateClaim(@NotNull Claim claim, long timeSinceLastSession)
+    private void evaluateClaim(@NotNull OfflinePlayer player, @NotNull Claim claim, long timeSinceLastSession)
     {
-        if (timeSinceLastSession <= plugin.getProtectionDuration(claim)) return;
+        if (timeSinceLastSession <= plugin.config().getProtectionDuration(claim)) return;
 
         GriefPrevention.AddLogEntry(String.format("[GPClaimExpiration] %s has an area of %s and is eligible for delete",
                 claim.getID(), claim.getArea()), CustomLogEntryTypes.Debug, true);
+
+        // Ensure player is not exempt from claim expiration.
+        World world = claim.getLesserBoundaryCorner().getWorld();
+        String worldName = world == null ? "///illegal world name\\\\\\" : world.getName();
+        if (plugin.config().isExempt(player, worldName)) return;
+
+        GriefPrevention.AddLogEntry(
+                String.format("[GPClaimExpiration] %s is not exempt from expiration.", player.getUniqueId()),
+                CustomLogEntryTypes.Debug,
+                true);
 
         // Don't attempt to schedule if plugin is disabled.
         if (!plugin.isEnabled()) return;
@@ -162,7 +167,7 @@ class EvaluationManager
                     claim.getID(), claim.ownerID), CustomLogEntryTypes.Debug, false);
 
             // Fetch delete commands.
-            List<String> commandList = plugin.getCommandList("expiration.claim.commands", new ClaimReplacement(claim));
+            List<String> commandList = plugin.config().getClaimCommandList(worldName, new ClaimReplacement(claim));
 
             // Delete claim.
             GriefPrevention.instance.dataStore.deleteClaim(claim, true);

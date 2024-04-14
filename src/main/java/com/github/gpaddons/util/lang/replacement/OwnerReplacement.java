@@ -8,6 +8,7 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -54,14 +55,7 @@ public class OwnerReplacement implements MessageReplacement
         this.replaceId = '$' + prefix + "Id";
         this.replaceName = '$' + prefix + "Name";
 
-        if (uuid == null)
-        {
-            this.uuidVal = new UUID(0, 0).toString();
-        }
-        else
-        {
-            this.uuidVal = uuid.toString();
-        }
+        this.uuidVal = Objects.requireNonNullElseGet(uuid, () -> new UUID(0, 0)).toString();
 
         if (player == null)
         {
@@ -69,7 +63,7 @@ public class OwnerReplacement implements MessageReplacement
         }
         else
         {
-            nameVal = Lang.getName(player);
+            this.nameVal = Lang.getName(player);
         }
     }
 

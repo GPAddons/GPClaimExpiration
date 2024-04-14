@@ -21,3 +21,25 @@ expiration:
   pet:
     days: 60
     commands: []
+
+# Per-world overrides
+# Note that only certain values are configurable per-world.
+overrides:
+  # Ex.: A high turnover world may have higher activity requirements.
+  high_turnover_world:
+    expiration:
+      days-per-area:
+        250000: -1
+        10000: 7
+        0: 2
+      pet:
+        days: 7
+  # Ex.: The commercial hub requires activity to keep store location, no one is allowed to bypass expiration.
+  commercial_hub_world:
+    expiration:
+      bypass:
+        claim_blocks: -1
+        bonus_claim_blocks: -1
+        permissions: []
+      claim.commands:
+      - adminclaimauction $world $locX $locZ $locXMax $locZMax $area

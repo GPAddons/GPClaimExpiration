@@ -37,7 +37,7 @@ abstract class WarningListener implements Listener
     void warn(@NotNull Claim claim, @Nullable CommandSender modifier)
     {
         // Ensure modification is by a player.
-        if (!(modifier instanceof Player)) return;
+        if (!(modifier instanceof Player playerModifier)) return;
 
         // Ensure message is set.
         if (!Lang.isSet(Message.NOTIFICATION_EXPIRATION)) return;
@@ -47,13 +47,13 @@ abstract class WarningListener implements Listener
 
         OfflinePlayer player = plugin.getServer().getOfflinePlayer(claim.ownerID);
 
-        long protectionDuration = plugin.getProtectionDuration(claim);
+        long protectionDuration = plugin.config().getProtectionDuration(claim);
 
         // Ensure claim is of a size that will actually expire.
         if (protectionDuration == Long.MAX_VALUE) return;
 
         // Ensure claim will be eligible for delete.
-        if (plugin.isExempt(player)) return;
+        if (plugin.config().isExempt(player, playerModifier.getWorld().getName())) return;
 
         long days = TimeUnit.DAYS.convert(protectionDuration, TimeUnit.MILLISECONDS);
 
