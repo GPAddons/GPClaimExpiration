@@ -91,7 +91,7 @@ public class Configuration
         };
         claimExpirationCommands = new StringListSetting(plugin.getConfig(), "expiration.claim.commands", List.of());
 
-        petProtectionDuration = new IntSetting(plugin.getConfig(), "expiration.pets.days", 60);
+        petProtectionDuration = new IntSetting(plugin.getConfig(), "expiration.pet.days", 60);
         petExpirationCommands = new StringListSetting(plugin.getConfig(), "expiration.pet.commands", List.of());
     }
 
